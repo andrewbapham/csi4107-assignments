@@ -2,7 +2,6 @@ from collections import defaultdict
 from typing import Dict
 from preprocessing import ScifactDocument
 
-
 class InvertedIndex:
     def __init__(self):
         # Creating the dictionary in the structure index : Dict[str, Dict[str, int]]
@@ -10,6 +9,8 @@ class InvertedIndex:
 
         # Mapping to document length and frequency
         self.doc_lengths: Dict[str, int] = {}
+        self.doc_terms: Dict[str, set[str]] = {}
+        self.max_doc_length: Dict[str, int] = {}
         self.doc_freqs: Dict[str, int] = {}
         self.num_documents = 0
 
@@ -21,10 +22,14 @@ class InvertedIndex:
 
         # Counting frequency
         term_counts = defaultdict(int)
+        max_freq = 0
         for token in tokens:
             term_counts[token] += 1
-        self.doc_lengths[doc_id] = len(tokens)
+            max_freq = max(max_freq, term_counts[token])
 
+        self.doc_lengths[doc_id] = len(tokens)
+        self.max_doc_length[doc_id] = max_freq
+        self.doc_terms[doc_id] = set(tokens)
         # Adding the document terms to the inverted index
         for term, tf in term_counts.items():
             self.index[term][doc_id] = tf
