@@ -8,8 +8,13 @@ from preprocessing import preprocess_text
 def get_tf(term_freq: int, max_freq: int) -> float:
     return term_freq / max_freq
 
-def get_idf(doc_freq: int, total_docs: int) -> float:
+import math
+
+def get_idf(doc_freq, total_docs):
+    if doc_freq == 0:
+        return 0
     return math.log2(total_docs / doc_freq)
+
 
 def get_tf_idf(term_freq: int, max_freq: int, doc_freq: int, total_docs: int) -> float:
     tf = get_tf(term_freq, max_freq)
