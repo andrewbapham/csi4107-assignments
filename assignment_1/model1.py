@@ -10,14 +10,13 @@ import numpy as np
 import json
 
 #Reusing lots of code from a1 here
-def rank_documents(query_text, index, top_k=100):
+def rank_documents(query_text, index, doc_vectors, doc_magnitudes, top_k=100):
+    scores = []
     query_vec = build_query_tf_idf_vector(query_text, index)
     query_mag = get_magnitude(query_vec)
-
-    scores = []
-    for doc_id in index.doc_terms:
-        doc_vec = build_doc_tf_idf_vector(doc_id, index)
-        doc_mag = get_magnitude(doc_vec)
+    for doc_id in doc_vectors:
+        doc_vec = doc_vectors[doc_id]
+        doc_mag = doc_magnitudes[doc_id]
 
         if doc_mag == 0:
             continue
@@ -37,6 +36,18 @@ documents = read_documents_from_file("scifact/corpus.jsonl")
 documents = preprocess_documents(documents)
 index = InvertedIndex()
 index.build_index(documents)
+
+
+#Precomputing TF-IDF vectors for all documents to help with optimization
+
+doc_vectors = {}
+doc_magnitudes = {}
+
+for doc_id in index.doc_terms:
+    vec = build_doc_tf_idf_vector(doc_id, index)
+    doc_vectors[doc_id] = vec
+    doc_magnitudes[doc_id] = get_magnitude(vec)
+
 
 doc_texts = {}
 for doc in raw_documents:
@@ -83,7 +94,7 @@ with open("Results_SBERT", "w", encoding="utf-8") as out:
     for q in queries:
         qid = q["_id"]
         query_text = q["text"]
-        top_100 = rank_documents(query_text, index, top_k=100)
+        top_100 = rank_documents(query_text, index, doc_vectors, doc_magnitudes, top_k=100)
         top_100_ids = [doc_id for doc_id, score in top_100]
         reranked = sbert_rerank(query_text, top_100_ids)
 
